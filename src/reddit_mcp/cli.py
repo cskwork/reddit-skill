@@ -43,6 +43,9 @@ def main(argv: list[str] | None = None) -> int:
     p_edit.add_argument("--body")
     p_edit.add_argument("--body-file")
 
+    p_del = sub.add_parser("delete", help="Delete one of your own posts.")
+    p_del.add_argument("url_or_id")
+
     args = parser.parse_args(argv)
     reddit = reddit_client()
 
@@ -62,6 +65,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "edit":
         body = _read_body(args.body, args.body_file)
         print(json.dumps(reddit_ops.edit_post(reddit, args.url_or_id, body), indent=2, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "delete":
+        print(json.dumps(reddit_ops.delete_post(reddit, args.url_or_id), indent=2, ensure_ascii=False))
         return 0
 
     if args.cmd == "post":

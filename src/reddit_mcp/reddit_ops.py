@@ -116,6 +116,18 @@ def edit_post(reddit: praw.Reddit, url_or_id: str, new_body: str) -> dict:
     }
 
 
+def delete_post(reddit: praw.Reddit, url_or_id: str) -> dict:
+    """Delete one of your own posts. Reddit replaces it with [deleted]/[removed]."""
+    sub = reddit.submission(url=url_or_id) if "://" in url_or_id else reddit.submission(id=url_or_id)
+    sub_id = sub.id
+    permalink = sub.permalink
+    try:
+        sub.delete()
+    except prawcore.exceptions.PrawcoreException as e:
+        raise RuntimeError(f"Reddit API error: {e}") from e
+    return {"id": sub_id, "url": f"https://www.reddit.com{permalink}", "deleted": True}
+
+
 def get_post(reddit: praw.Reddit, url_or_id: str) -> dict:
     sub = reddit.submission(url=url_or_id) if "://" in url_or_id else reddit.submission(id=url_or_id)
     return {

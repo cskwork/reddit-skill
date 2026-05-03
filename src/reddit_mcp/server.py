@@ -60,6 +60,12 @@ def edit_post(url_or_id: str, new_body: str) -> dict:
 
 
 @mcp.tool()
+def delete_post(url_or_id: str) -> dict:
+    """Delete one of your own posts."""
+    return reddit_ops.delete_post(reddit_client(), url_or_id)
+
+
+@mcp.tool()
 def get_post(url_or_id: str) -> dict:
     """Fetch a single submission by URL or ID."""
     return reddit_ops.get_post(reddit_client(), url_or_id)
