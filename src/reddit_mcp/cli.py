@@ -1,0 +1,88 @@
+"""Standalone CLI for posting/listing without the MCP transport. Usable as `reddit-post`."""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+from . import reddit_ops
+from .auth import reddit_client
+
+
+def _read_body(arg: str | None, body_file: str | None) -> str:
+    if body_file:
+        return Path(body_file).read_text(encoding="utf-8")
+    if arg is not None:
+        return arg
+    if not sys.stdin.isatty():
+        return sys.stdin.read()
+    raise SystemExit("Provide --body, --body-file, or pipe text via stdin.")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="reddit-post", description="Post to Reddit with flair support.")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_post = sub.add_parser("post", help="Create a self post.")
+    p_post.add_argument("--subreddit", required=True)
+    p_post.add_argument("--title", required=True)
+    p_post.add_argument("--body")
+    p_post.add_argument("--body-file", help="Read body from this file path.")
+    p_post.add_argument("--flair", help="Flair display text (case-insensitive match).")
+    p_post.add_argument("--dry-run", action="store_true", help="Resolve flair and print plan without posting.")
+
+    p_flairs = sub.add_parser("flairs", help="List available flair templates for a subreddit.")
+    p_flairs.add_argument("subreddit")
+
+    p_get = sub.add_parser("get", help="Fetch a post by URL or ID.")
+    p_get.add_argument("url_or_id")
+
+    args = parser.parse_args(argv)
+    reddit = reddit_client()
+
+    if args.cmd == "flairs":
+        flairs = reddit_ops.list_flairs(reddit, args.subreddit)
+        if not flairs:
+            print(f"r/{args.subreddit} has no link-post flair templates (or you can't read them).")
+            return 0
+        for f in flairs:
+            print(f"{f.id}\t{f.text!r}\teditable={f.editable}")
+        return 0
+
+    if args.cmd == "get":
+        print(json.dumps(reddit_ops.get_post(reddit, args.url_or_id), indent=2, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "post":
+        body = _read_body(args.body, args.body_file)
+        if args.dry_run:
+            flair_id = None
+            if args.flair:
+                flair_id = reddit_ops.resolve_flair_id(reddit, args.subreddit, args.flair)
+            print(json.dumps({
+                "would_post": {
+                    "subreddit": args.subreddit,
+                    "title": args.title,
+                    "body_chars": len(body),
+                    "flair_text": args.flair,
+                    "resolved_flair_id": flair_id,
+                }
+            }, indent=2, ensure_ascii=False))
+            return 0
+        result = reddit_ops.create_post(
+            reddit,
+            subreddit=args.subreddit,
+            title=args.title,
+            body=body,
+            flair_text=args.flair,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    parser.print_help()
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
