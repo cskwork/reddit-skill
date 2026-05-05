@@ -72,6 +72,23 @@ def get_post(url_or_id: str) -> dict:
 
 
 @mcp.tool()
+def reply(target: str, body: str, kind: Optional[str] = None) -> dict:
+    """Reply to a Reddit post (top-level comment) or to a comment.
+
+    Args:
+        target: Reddit URL, fullname (`t1_xxx` for comment, `t3_xxx` for post),
+            or bare ID. URLs and fullnames are auto-detected. Bare IDs default
+            to submission; pass `kind="comment"` to override.
+        body: Reply body in markdown.
+        kind: Force interpretation as "post" or "comment". Default: auto-detect.
+
+    Returns:
+        Dict with id, fullname, url, parent_id, body, replied_to, parent_url.
+    """
+    return reddit_ops.reply(reddit_client(), target, body, kind=kind)
+
+
+@mcp.tool()
 def search_reddit(
     query: str,
     subreddit: Optional[str] = None,

@@ -46,6 +46,27 @@ def main(argv: list[str] | None = None) -> int:
     p_del = sub.add_parser("delete", help="Delete one of your own posts.")
     p_del.add_argument("url_or_id")
 
+    p_reply = sub.add_parser(
+        "reply",
+        help="Reply to a post (top-level comment) or to a comment.",
+    )
+    p_reply.add_argument(
+        "target",
+        help="Reddit URL, fullname (t1_/t3_), or bare ID. Bare IDs default to submission.",
+    )
+    p_reply.add_argument("--body")
+    p_reply.add_argument("--body-file", help="Read body from this file path.")
+    p_reply.add_argument(
+        "--kind",
+        choices=["post", "comment"],
+        help="Force interpretation. Default: auto-detect from URL/fullname.",
+    )
+    p_reply.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Resolve target and print plan without replying.",
+    )
+
     p_search = sub.add_parser(
         "search",
         help="Search posts. For style-matching, use --sort top --time-filter month.",
@@ -81,6 +102,24 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "delete":
         print(json.dumps(reddit_ops.delete_post(reddit, args.url_or_id), indent=2, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "reply":
+        body = _read_body(args.body, args.body_file)
+        replied_to = args.kind or (
+            "comment" if reddit_ops._looks_like_comment_target(args.target) else "post"
+        )
+        if args.dry_run:
+            print(json.dumps({
+                "would_reply": {
+                    "target": args.target,
+                    "replied_to": replied_to,
+                    "body_chars": len(body),
+                }
+            }, indent=2, ensure_ascii=False))
+            return 0
+        result = reddit_ops.reply(reddit, args.target, body, kind=args.kind)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
     if args.cmd == "search":

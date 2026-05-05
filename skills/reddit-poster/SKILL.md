@@ -1,11 +1,11 @@
 ---
 name: reddit-poster
 description: Draft and publish Reddit posts that read human (lowercase, story-first) using the cskwork/reddit-mcp tools, with flair lookup, dry-run, and Reddit Responsible Builder Policy compliance.
-when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on Reddit", or invokes /reddit-poster. Also when editing or deleting their own posts.
+when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on Reddit", or invokes /reddit-poster. Also when editing or deleting their own posts, or replying to a post or comment.
 allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
 
-Wrap the `cskwork/reddit-mcp` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Available as a CLI (`reddit-post`) or as MCP tools (`create_post`, `edit_post`, `delete_post`, `list_flairs`, `get_post`, `search_reddit`).
+Wrap the `cskwork/reddit-mcp` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Available as a CLI (`reddit-post`) or as MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`).
 
 Repo: <https://github.com/cskwork/reddit-mcp>
 
@@ -109,6 +109,26 @@ uv run reddit-post get <url>
 ```
 
 Confirm `link_flair_text` matches what you intended — that's the only way to be sure flair landed.
+
+## Replying to a post or comment
+
+Use `reply` to leave a top-level comment on a submission, or to respond to a specific comment.
+
+```bash
+# Reply to a post (auto-detected from submission URL)
+uv run reddit-post reply <post_url> --body-file reply.md --dry-run
+uv run reddit-post reply <post_url> --body-file reply.md
+
+# Reply to a comment (auto-detected from comment URL)
+uv run reddit-post reply <comment_url> --body "..."
+
+# Bare IDs default to submission — pass --kind comment to override
+uv run reddit-post reply abc123 --body "..." --kind comment
+```
+
+Replies follow the same human-style rules as posts (lowercase casual, no marketing tone), but shorter. A reply that runs longer than the comment it answers usually loses readers — match the length of the question, not the length of your codebase.
+
+Always dry-run first to confirm the target is interpreted as expected (`replied_to: "post"` vs `"comment"`). Get explicit user approval before the live submit; replies are also irreversible external actions.
 
 ## Editing and deleting
 

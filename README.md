@@ -2,8 +2,8 @@
 
 Reddit MCP server with **proper post-flair support**, plus a standalone CLI/PRAW poster. Built because the popular Reddit MCP servers either don't expose `flair_id` at all or pass the flair text where Reddit's API expects an ID.
 
-- **MCP tools**: `create_post` (with case-insensitive flair lookup), `list_flairs`, `get_post`, `search_reddit`
-- **CLI**: `reddit-post post|flairs|get` for one-off use without an MCP client
+- **MCP tools**: `create_post` (with case-insensitive flair lookup), `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`
+- **CLI**: `reddit-post post|flairs|get|edit|delete|reply|search` for one-off use without an MCP client
 - **Auth**: env vars first, then `~/.claude.json`'s `mcpServers.reddit.env` as fallback
 
 ## Install
@@ -44,6 +44,23 @@ uv run reddit-post post --subreddit ClaudeCode \
 
 `stdin` works too: `cat notes.md | uv run reddit-post post --subreddit X --title Y --flair Z`.
 
+### Reply to a post or comment
+
+```bash
+# Reply to a post (top-level comment) — auto-detected from a submission URL
+uv run reddit-post reply https://www.reddit.com/r/X/comments/POST_ID/slug/ \
+  --body-file reply.md --dry-run
+
+# Reply to a specific comment — auto-detected from a comment URL
+uv run reddit-post reply https://www.reddit.com/r/X/comments/POST_ID/slug/COMMENT_ID/ \
+  --body "thanks for the question — short answer is..."
+
+# Force interpretation when passing a bare ID (defaults to post otherwise)
+uv run reddit-post reply abc123 --body "..." --kind comment
+```
+
+Returns `{id, fullname, url, parent_id, body, replied_to, parent_url}`. If Reddit accepts the request but returns no comment (rate-limit or shadow-block), the call raises with a clear message instead of silently succeeding.
+
 ## Use as an MCP server (Claude Code / Claude Desktop)
 
 Add to your MCP config (e.g. `~/.claude.json` `mcpServers`):
@@ -64,7 +81,7 @@ Add to your MCP config (e.g. `~/.claude.json` `mcpServers`):
 }
 ```
 
-Restart Claude Code. Six tools become available: `create_post`, `edit_post`, `delete_post`, `list_flairs`, `get_post`, `search_reddit`.
+Restart Claude Code. Seven tools become available: `create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`.
 
 ## Claude Code skill — `reddit-poster`
 

@@ -1,11 +1,17 @@
 """Reddit operations shared by the MCP server and the CLI."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Optional
 
 import praw
 import prawcore
+
+
+# Comment URL has the form /r/<sub>/comments/<post_id>/<slug>/<comment_id>
+# Submission URL stops at /r/<sub>/comments/<post_id>[/<slug>].
+_COMMENT_URL_RE = re.compile(r"/r/[^/]+/comments/[a-z0-9]+/[^/]+/[a-z0-9]+", re.IGNORECASE)
 
 
 class FlairNotFoundError(LookupError):
@@ -145,6 +151,82 @@ def delete_post(reddit: praw.Reddit, url_or_id: str) -> dict:
     except prawcore.exceptions.PrawcoreException as e:
         raise RuntimeError(f"Reddit API error: {e}") from e
     return {"id": sub_id, "url": f"https://www.reddit.com{permalink}", "deleted": True}
+
+
+def _looks_like_comment_target(target: str) -> bool:
+    """Best-effort: does this URL/fullname/ID refer to a comment vs. a submission?
+
+    Reddit ID space overlaps (both 6-7 alnum chars), so a bare unprefixed ID is
+    treated as a submission. Pass `kind` explicitly to override.
+    """
+    if target.startswith("t1_"):
+        return True
+    if target.startswith("t3_"):
+        return False
+    if "://" in target:
+        return bool(_COMMENT_URL_RE.search(target))
+    return False
+
+
+def _resolve_reply_target(reddit: praw.Reddit, target: str, kind: Optional[str]):
+    """Return (parent, replied_to) where parent is a Submission or Comment."""
+    if kind not in (None, "post", "comment"):
+        raise ValueError("kind must be 'post', 'comment', or None")
+
+    is_comment = (kind == "comment") if kind else _looks_like_comment_target(target)
+
+    if is_comment:
+        if "://" in target:
+            return reddit.comment(url=target), "comment"
+        bare = target.removeprefix("t1_")
+        return reddit.comment(id=bare), "comment"
+
+    if "://" in target:
+        return reddit.submission(url=target), "post"
+    bare = target.removeprefix("t3_")
+    return reddit.submission(id=bare), "post"
+
+
+def reply(
+    reddit: praw.Reddit,
+    target: str,
+    body: str,
+    *,
+    kind: Optional[str] = None,
+) -> dict:
+    """Reply to a submission (top-level comment) or to a comment.
+
+    Auto-detects from URL shape or `t1_`/`t3_` fullname. For bare IDs, defaults
+    to submission; pass `kind="comment"` to force.
+    """
+    if not body or not body.strip():
+        raise ValueError("Reply body cannot be empty.")
+
+    parent, replied_to = _resolve_reply_target(reddit, target, kind)
+
+    try:
+        new_comment = parent.reply(body)
+    except prawcore.exceptions.PrawcoreException as e:
+        raise RuntimeError(f"Reddit API error: {e}") from e
+
+    if new_comment is None:
+        # PRAW returns None when Reddit accepts the request but doesn't echo
+        # the new comment back — most often rate-limit or shadow-block.
+        raise RuntimeError(
+            "Reddit accepted the request but returned no comment "
+            "(rate-limited, shadow-blocked, or comment-restricted subreddit)."
+        )
+
+    parent_permalink = getattr(parent, "permalink", None)
+    return {
+        "id": new_comment.id,
+        "fullname": new_comment.fullname,
+        "url": f"https://www.reddit.com{new_comment.permalink}",
+        "parent_id": new_comment.parent_id,
+        "body": new_comment.body,
+        "replied_to": replied_to,
+        "parent_url": f"https://www.reddit.com{parent_permalink}" if parent_permalink else None,
+    }
 
 
 def get_post(reddit: praw.Reddit, url_or_id: str) -> dict:
