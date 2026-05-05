@@ -24,8 +24,17 @@ class Flair:
 
 
 def list_flairs(reddit: praw.Reddit, subreddit: str) -> list[Flair]:
+    """Return link-flair templates for a subreddit.
+
+    Reddit gates `/api/link_flair_v2` to moderators on most subs, so a 403
+    is the common case for non-mod accounts. Treat it as "no readable
+    templates" and let callers degrade gracefully.
+    """
     sub = reddit.subreddit(subreddit)
-    return [Flair.from_template(t) for t in sub.flair.link_templates]
+    try:
+        return [Flair.from_template(t) for t in sub.flair.link_templates]
+    except prawcore.exceptions.Forbidden:
+        return []
 
 
 def resolve_flair_id(reddit: praw.Reddit, subreddit: str, flair_text: str) -> str:
@@ -69,7 +78,15 @@ def create_post(
 
     flair_id: Optional[str] = None
     if flair_text:
-        flair_id = resolve_flair_id(reddit, subreddit, flair_text)
+        try:
+            flair_id = resolve_flair_id(reddit, subreddit, flair_text)
+        except FlairNotFoundError:
+            # Templates not readable (mod-only) or no match. Pass flair_text
+            # directly and let Reddit accept or reject it. Subs with
+            # text-editable templates or self-assignable flair will accept;
+            # strict subs return SUBMIT_VALIDATION_FLAIR_REQUIRED with a
+            # clear API error.
+            flair_id = None
 
     kwargs = {"title": title[:300], "send_replies": send_replies}
     if is_self:
@@ -78,6 +95,8 @@ def create_post(
         kwargs["url"] = body
     if flair_id:
         kwargs["flair_id"] = flair_id
+    elif flair_text:
+        kwargs["flair_text"] = flair_text
 
     try:
         submission = sub.submit(**kwargs)

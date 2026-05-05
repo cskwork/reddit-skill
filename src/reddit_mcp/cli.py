@@ -97,7 +97,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.dry_run:
             flair_id = None
             if args.flair:
-                flair_id = reddit_ops.resolve_flair_id(reddit, args.subreddit, args.flair)
+                try:
+                    flair_id = reddit_ops.resolve_flair_id(reddit, args.subreddit, args.flair)
+                except reddit_ops.FlairNotFoundError:
+                    # Templates not readable or no match; real post will
+                    # fall back to passing flair_text directly to Reddit.
+                    flair_id = None
             print(json.dumps({
                 "would_post": {
                     "subreddit": args.subreddit,
