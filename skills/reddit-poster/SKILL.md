@@ -5,7 +5,7 @@ when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on R
 allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
 
-Wrap the `cskwork/reddit-mcp` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Available as a CLI (`reddit-post`) or as MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`).
+Wrap the `cskwork/reddit-mcp` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Drives the **`reddit-post` CLI** (primary path — works in any session regardless of MCP loading state). The same package also exposes MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`) if the user prefers; both call the same PRAW core.
 
 Repo: <https://github.com/cskwork/reddit-mcp>
 
@@ -16,7 +16,7 @@ uv --version       # 0.4+ recommended
 cd <path-to-reddit-mcp> && uv run reddit-post --help
 ```
 
-If credentials missing, the CLI raises with the exact env vars to set. Defaults: env vars first, then `~/.claude.json`'s `mcpServers.reddit.env` fallback.
+If credentials missing, the CLI raises with the exact env vars to set. Resolution order: env vars → `.env` (walked up from cwd) → `~/.claude.json` `mcpServers.reddit.env` fallback.
 
 ## The four-step flow
 

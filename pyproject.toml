@@ -1,7 +1,7 @@
 [project]
 name = "cskwork-reddit-mcp"
 version = "0.1.0"
-description = "Reddit MCP server with proper post flair support, plus a standalone PRAW poster script."
+description = "Reddit CLI for posting with proper flair support (plus an optional MCP server). Built on PRAW."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

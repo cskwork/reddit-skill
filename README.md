@@ -1,10 +1,10 @@
 # reddit-mcp
 
-Reddit MCP server with **proper post-flair support**, plus a standalone CLI/PRAW poster. Built because the popular Reddit MCP servers either don't expose `flair_id` at all or pass the flair text where Reddit's API expects an ID.
+A Reddit **CLI** (`reddit-post`) for posting with **proper flair handling**, with an optional MCP server on the side. Built because the popular Reddit MCP servers either don't expose `flair_id` at all or pass the flair text where Reddit's API expects an ID.
 
-- **MCP tools**: `create_post` (with case-insensitive flair lookup), `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`
-- **CLI**: `reddit-post post|flairs|get|edit|delete|reply|search` for one-off use without an MCP client
-- **Auth**: env vars first, then `~/.claude.json`'s `mcpServers.reddit.env` as fallback
+- **CLI** (primary): `reddit-post post|flairs|get|edit|delete|reply|search` — all features, no MCP client required.
+- **MCP server** (optional): same tools exposed over stdio for Claude Code / Claude Desktop.
+- **Skill**: bundled `reddit-poster` Claude skill that wraps the CLI in a discover → draft → dry-run → approve flow.
 
 ## Install
 
@@ -16,7 +16,16 @@ uv sync
 
 ## Credentials
 
-Set these env vars (or rely on `~/.claude.json` fallback):
+Resolution order: **env vars → `.env` (walked up from cwd) → `~/.claude.json` `mcpServers.reddit.env` (fallback)**.
+
+The recommended setup is a `.env` at your project (or repo) root:
+
+```bash
+cp .env.example .env
+# then edit .env with your values
+```
+
+`.env` keys (all required):
 
 ```
 REDDIT_CLIENT_ID
@@ -25,9 +34,11 @@ REDDIT_USERNAME
 REDDIT_PASSWORD
 ```
 
-Get the client id/secret from <https://www.reddit.com/prefs/apps> by creating a "script" app. If your account has 2FA, generate an app password instead of using your account password.
+Get the client id/secret from <https://www.reddit.com/prefs/apps> by creating a "script" app. If your account uses 2FA, generate an app password instead of using your account password. `.env` is already in `.gitignore`.
 
-## Use as a CLI
+The `~/.claude.json` fallback exists for backward compatibility with users who already configured Reddit credentials inside an MCP block — it keeps working, but new setups should prefer `.env`.
+
+## CLI
 
 ```bash
 # Discover what flairs r/ClaudeCode requires
@@ -61,9 +72,20 @@ uv run reddit-post reply abc123 --body "..." --kind comment
 
 Returns `{id, fullname, url, parent_id, body, replied_to, parent_url}`. If Reddit accepts the request but returns no comment (rate-limit or shadow-block), the call raises with a clear message instead of silently succeeding.
 
-## Use as an MCP server (Claude Code / Claude Desktop)
+### Edit and delete
 
-Add to your MCP config (e.g. `~/.claude.json` `mcpServers`):
+Reddit only allows editing the **body** of self posts, not the title.
+
+```bash
+uv run reddit-post edit <url> --body-file new_body.md
+uv run reddit-post delete <url>
+```
+
+Title-only changes require delete + repost. The original URL dies; warn anyone with inbound links before doing this.
+
+## Optional: use as an MCP server
+
+If you prefer to call these tools from Claude Code / Claude Desktop's MCP integration instead of the CLI, add this to your MCP config (e.g. `~/.claude.json` `mcpServers`):
 
 ```json
 {
@@ -83,6 +105,12 @@ Add to your MCP config (e.g. `~/.claude.json` `mcpServers`):
 
 Restart Claude Code. Seven tools become available: `create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`.
 
+The MCP path is functionally equivalent to the CLI — same package, same PRAW under the hood, same flair resolution. Choose based on where you want to call from.
+
+### `create_post(subreddit, title, body, flair_text=None, is_self=True)`
+
+If the subreddit requires flair, pass `flair_text` — the server fetches `subreddit.flair.link_templates`, matches by display text (exact first, then unique substring, case-insensitive), and submits with the resolved `flair_id`. If the match is ambiguous or missing, you get back the list of valid flairs in the error.
+
 ## Claude Code skill — `reddit-poster`
 
 A bundled skill at [`skills/reddit-poster/SKILL.md`](skills/reddit-poster/SKILL.md) teaches Claude how to use these tools well: discover flairs first, draft in a human (lowercase, story-first) style instead of marketing copy, dry-run before posting, follow Reddit's Responsible Builder Policy on disclosure, and stop for explicit user approval before any irreversible action (post, edit, delete).
@@ -99,11 +127,7 @@ mkdir -p ~/.claude/skills/reddit-poster
 cp skills/reddit-poster/SKILL.md ~/.claude/skills/reddit-poster/SKILL.md
 ```
 
-Then restart Claude Code and ask to post on Reddit; the skill loads automatically.
-
-### `create_post(subreddit, title, body, flair_text=None, is_self=True)`
-
-If the subreddit requires flair, pass `flair_text` — the server fetches `subreddit.flair.link_templates`, matches by display text (exact first, then unique substring, case-insensitive), and submits with the resolved `flair_id`. If the match is ambiguous or missing, you get back the list of valid flairs in the error.
+Then restart Claude Code and ask to post on Reddit; the skill loads automatically and drives the CLI.
 
 ## Why this exists
 
@@ -112,11 +136,11 @@ The widely shipped Reddit MCP servers fail two ways:
 1. **No flair param at all** → can't post to subreddits that require flair (most large communities).
 2. **Flair param accepted but mishandled** → the text is passed where Reddit expects an ID, silently dropping the flair or failing validation.
 
-This server does the lookup correctly: text in, ID resolved, post submitted.
+This package does the lookup correctly: text in, ID resolved, post submitted. The CLI is the primary surface because most users only need a tool that posts; the MCP wrapper is there for those who want it inside Claude's tool-use loop.
 
 ## Responsible Builder Policy
 
-This server respects [Reddit's Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy):
+This package respects [Reddit's Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy):
 
 - Don't post identical content across subreddits — use it for one place at a time, rewrite per audience.
 - Don't manipulate votes, karma, or send unsolicited DMs.
