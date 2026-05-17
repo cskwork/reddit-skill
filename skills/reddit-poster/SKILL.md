@@ -159,6 +159,22 @@ The sub only accepts link posts (r/programming is the canonical example). `reddi
 
 Some subs (r/ClaudeAI Showcase posts) remove submissions from low-karma OPs and redirect to a stickied megathread. The mod reply names the megathread URL. Post the body as a **top-level comment** on that megathread (karma minimums don't apply to comments there) via `reddit-post reply <megathread_url>`. Trim the body to comment-appropriate length (~1,000–1,500 chars) — megathread comments compete in a long list and read worse than full posts.
 
+### Silent / shadow removal (community-participation karma)
+
+Some subs (r/webdev is the canonical example) silently shadow-remove "I built X" posts from accounts with low **engagement-in-this-sub** karma — the post is visible to the OP, gets a `score: 1`, and `removed_by_category` stays null on the API. The mod team doesn't necessarily message the OP; they may just expect the account to build community standing first.
+
+Detection: the user reports the post isn't visible to others, or that they got feedback that it was removed. The PRAW snapshot will look healthy (`approved: null`, `banned_by: null`) — don't trust the API alone.
+
+Mitigation:
+
+- Before recommending a fresh "I built X" submission to a community-strict sub (r/webdev, r/javascript, r/programming-adjacent), ask the user whether they've recently commented / upvoted there. If the answer is "no, this would be my first post," recommend a **participation-first** strategy: have them spend a few days leaving substantive comments on existing posts before submitting their own.
+- After a shadow-removal, do **not** immediately retry the same body — that often escalates the auto-mod's score. Wait at least a week, build in-sub karma via comments, then revise the body before re-submission.
+- Track which subs in this session have already exhibited shadow-removal behavior, and surface that history to the user before suggesting another submission to the same sub.
+
+### Multiple-submission burst rate-limit
+
+Reddit's site-wide anti-spam scores **how many posts the account has submitted in the last few hours** across all subs, not just the target sub. After 3–4 link/text posts from the same account inside a day, even otherwise-valid submissions start to trigger silent filters in stricter subs. If a user wants to promote across multiple subs in one session, recommend spacing submissions over multiple days, or at minimum sequencing safer subs (looser community-karma, e.g. r/SideProject) before stricter ones.
+
 ## Editing and deleting
 
 Reddit allows editing the **body** of self posts, not the title.
