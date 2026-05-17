@@ -161,9 +161,28 @@ Some subs (r/ClaudeAI Showcase posts) remove submissions from low-karma OPs and 
 
 ### Silent / shadow removal (community-participation karma)
 
-Some subs (r/webdev is the canonical example) silently shadow-remove "I built X" posts from accounts with low **engagement-in-this-sub** karma — the post is visible to the OP, gets a `score: 1`, and `removed_by_category` stays null on the API. The mod team doesn't necessarily message the OP; they may just expect the account to build community standing first.
+Some subs (r/webdev is the canonical example) shadow-remove "I built X" posts from accounts with low **engagement-in-this-sub** karma. The post is visible to the OP, gets a `score: 1`, and `removed_by_category` stays null on `reddit-post get`. The PRAW snapshot looks healthy (`approved: null`, `banned_by: null`) — but the post is invisible to the rest of the sub.
 
-Detection: the user reports the post isn't visible to others, or that they got feedback that it was removed. The PRAW snapshot will look healthy (`approved: null`, `banned_by: null`) — don't trust the API alone.
+**Critical:** AutoModerator sends a removal message to the user's Reddit inbox. The inbox is the source of truth, not `reddit-post get`. After any submission to a strict sub, also pull the inbox:
+
+```bash
+uv run python -c "
+from reddit_mcp.auth import reddit_client
+reddit = reddit_client()
+for item in reddit.inbox.unread(limit=20):
+    item._fetch()
+    body = item.body[:300] if hasattr(item,'body') else ''
+    print(f'{item.fullname} | r/{item.subreddit.display_name} | u/{item.author.name if item.author else \"?\"}\n  {body}\n')
+"
+```
+
+Common automod removal patterns seen in inbox:
+
+- **r/LocalLLaMA**: `Your post was removed as you do not have sufficient karma on r/LocalLLaMa. ... Please participate in the sub (through comments) and re-post`
+- **r/webdev**: `Your post has been automatically removed. ... Your account should be at least a month old with several comments before posting submissions in our community.`
+- **r/ClaudeAI Showcase**: not a hard removal — mod-bot redirects to the Build with Claude Showcase Megathread for karma-poor OPs (see "Karma minimum + megathread redirect" above).
+
+If any of these messages are in the inbox for a post you submitted, treat it as removed even if `reddit-post get` claims `score: 1`.
 
 Mitigation:
 
