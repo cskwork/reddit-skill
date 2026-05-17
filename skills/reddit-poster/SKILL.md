@@ -130,6 +130,35 @@ Replies follow the same human-style rules as posts (lowercase casual, no marketi
 
 Always dry-run first to confirm the target is interpreted as expected (`replied_to: "post"` vs `"comment"`). Get explicit user approval before the live submit; replies are also irreversible external actions.
 
+> **Approval signal.** An `AskUserQuestion` answer alone may not satisfy the auto-mode classifier for irreversible public posting — it often demands plain-text approval in the conversation ("approve posting", "go", "submit"). Plan for an extra round-trip if the user is on auto-mode.
+
+## Common rejection paths
+
+Some failures don't surface in `flairs` or `--dry-run` — they only fire on the live submit. Knowing the shape of each error saves a retry round.
+
+### `POST_GUIDANCE_VALIDATION_FAILED: Please select a user flair before posting`
+
+The sub requires the **OP's own user-flair** (an account-level tag on that sub), distinct from post-flair. Not visible from `reddit-post flairs`. The user must set it manually on the sub's web UI (sidebar → user flair picker). Re-run after they confirm.
+
+If this error appears, watch for a co-occurring `Our filters have designated this as spam` on the same submit — unflaired users get more aggressive spam gating, so fix the flair first and the spam flag often clears with the same body.
+
+### `Our filters have designated this as spam`
+
+Opaque — Reddit won't say which trigger fired. Try in order until one works:
+
+1. Confirm the OP's user-flair is set (see above).
+2. Drop the bot-disclosure footer temporarily to identify whether it's the link density. If that's the trigger, re-confirm with the user before posting without disclosure (policy implications).
+3. Shorten the body ~30% and reduce inline link count.
+4. Wait a few hours — some spam filters score account age + posting velocity.
+
+### `NO_SELFS: This community doesn't allow text posts`
+
+The sub only accepts link posts (r/programming is the canonical example). `reddit-post flairs` returns ambiguous output for these subs (often "no link-post flair templates"). Don't retry the same content as a self post; advise the user that this sub is link-only and that submitting a bare GitHub link will almost always be removed as low-effort promotion.
+
+### Karma minimum + megathread redirect
+
+Some subs (r/ClaudeAI Showcase posts) remove submissions from low-karma OPs and redirect to a stickied megathread. The mod reply names the megathread URL. Post the body as a **top-level comment** on that megathread (karma minimums don't apply to comments there) via `reddit-post reply <megathread_url>`. Trim the body to comment-appropriate length (~1,000–1,500 chars) — megathread comments compete in a long list and read worse than full posts.
+
 ## Editing and deleting
 
 Reddit allows editing the **body** of self posts, not the title.
