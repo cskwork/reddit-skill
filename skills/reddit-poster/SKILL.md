@@ -66,14 +66,27 @@ PRAW does not expose Reddit's view counts (mod-only data), so "top" ranks by sco
 
 The post must read like a person sharing something they built, not a landing page. Apply what you observed in step 1b — the rules below are defaults, not overrides.
 
-- **Open with a personal moment, not a feature list.** "got tired of jumping between two terminals…" beats "Single skill, three subcommands:". Lead with the pain or the trigger.
+**Length is the most important rule.** Reddit readers scroll. A post that needs scrolling on mobile loses 70%+ of readers before they finish. Target word counts:
+
+- **Showcase / project share**: 120-200 words. Hard ceiling 250.
+- **Tutorial / explainer**: 200-400 words. Hard ceiling 500.
+- **Bug report / help request**: as short as the question allows.
+- **Personal essay / take**: 400-800 words only if the top 1-3 posts in step 1b are that long. Otherwise cut.
+
+If your draft is over the target, the right move is almost always cutting, not condensing further with the same ideas. Pick the one or two things that actually matter and delete the rest. Specificity beats coverage — one concrete number ("355 skills, 55 used") beats a paragraph of generalities.
+
+The other rules:
+
+- **Open with a personal moment or a concrete number, not a feature list.** "got tired of jumping between two terminals…" beats "Single skill, three subcommands:". Lead with the pain, the trigger, or a surprising data point.
 - **Default to lowercase, casual sentences.** Reserve capitals for proper nouns and code identifiers.
 - **No TL;DR, no heavy bold, no emoji, no marketing adjectives.** Skip "powerful", "blazing", "seamless", "easy-to-use".
-- **Bullet lists are allowed but sparing.** One tight list of two or three items. Never the whole post.
-- **Acknowledge limitations honestly.** Edge cases and known bugs in line, not buried at the bottom.
-- **End with a low-key invitation.** "happy to take questions or feedback" — not "smash that upvote".
-- **Code references inline with backticks.** No code blocks unless the snippet is non-trivial.
+- **At most one bullet list, three or four items.** Never the whole post. If you're listing more than four items, you're padding.
+- **Acknowledge limitations honestly but tersely.** One line, in the body, not a "known limits" section. Long limits sections read as defensive and add length without adding value.
+- **End with a low-key invitation in one short sentence.** "curious what your X looks like" or "happy to take feedback". Not "smash that upvote", not a multi-line outro.
+- **Code references inline with backticks.** No code blocks unless the snippet is non-trivial. One install snippet is enough; don't add a quickstart, an "advanced usage", and a "configuration" block in the same post.
 - **Keep title plain, but capitalize it.** The body is lowercase casual; the **title is not**. Use sentence case at minimum (first letter capital, proper nouns capital, rest natural). Title Case is fine for short titles. All-lowercase titles read as either careless or affected and most subs penalize them. Reddit titles are immutable post-submit; triple-check before submitting.
+
+After drafting, do a length check: count words. If over the ceiling, cut before showing the user. The user shouldn't have to ask twice.
 
 ### Step 3 — dry-run
 
