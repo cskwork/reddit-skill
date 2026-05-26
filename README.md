@@ -1,4 +1,4 @@
-# reddit-mcp
+# reddit-skill
 
 A Reddit **CLI** (`reddit-post`) for posting with **proper flair handling**, with an optional MCP server on the side. Built because the popular Reddit MCP servers either don't expose `flair_id` at all or pass the flair text where Reddit's API expects an ID.
 
