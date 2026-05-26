@@ -1,22 +1,22 @@
 ---
 name: reddit-poster
-description: Draft and publish Reddit posts that read human (lowercase, story-first) using the cskwork/reddit-mcp tools, with flair lookup, dry-run, and Reddit Responsible Builder Policy compliance.
+description: Draft and publish Reddit posts that read human (lowercase, story-first) using the cskwork/reddit-skill tools, with flair lookup, dry-run, and Reddit Responsible Builder Policy compliance.
 when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on Reddit", or invokes /reddit-poster. Also when editing or deleting their own posts, or replying to a post or comment.
 allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
 
-Wrap the `cskwork/reddit-mcp` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Drives the **`reddit-post` CLI** (primary path — works in any session regardless of MCP loading state). The same package also exposes MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`) if the user prefers; both call the same PRAW core.
+Wrap the `cskwork/reddit-skill` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Available as a CLI (`reddit-post`) or as MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`).
 
-Repo: <https://github.com/cskwork/reddit-mcp>
+Repo: <https://github.com/cskwork/reddit-skill>
 
 ## Verify once per session
 
 ```bash
 uv --version       # 0.4+ recommended
-cd <path-to-reddit-mcp> && uv run reddit-post --help
+cd <path-to-reddit-skill> && uv run reddit-post --help
 ```
 
-If credentials missing, the CLI raises with the exact env vars to set. Resolution order: env vars → `.env` (walked up from cwd) → `~/.claude.json` `mcpServers.reddit.env` fallback.
+If credentials missing, the CLI raises with the exact env vars to set. Defaults: env vars first, then `~/.claude.json`'s `mcpServers.reddit.env` fallback.
 
 ## The four-step flow
 
@@ -29,7 +29,30 @@ Every Reddit post follows this loop. Don't skip steps.
 
 ### Step 1 — discover
 
-Pick exactly one subreddit. Cross-posting identical content violates Reddit Responsible Builder Policy and the MCP itself blocks it.
+Pick exactly one subreddit. Cross-posting identical content violates Reddit Responsible Builder Policy and the toolkit itself blocks it.
+
+#### 1.0. Account-level gate (mandatory before step 1a)
+
+Before any sub-specific work, enforce two account-level limits. Self-promo failures here are far more damaging than picking the wrong sub: a single shadowban silently removes every future post.
+
+- **Daily self-promo cap**: at most **two** posts from this account per 24 hours when each links to a repo or product the account owns. If two have already gone out today across any subs, hold the third for tomorrow. No exceptions for "but the subs are different" — Reddit's anti-spam tracks accounts, not subs.
+- **Per-sub cooldown**: 24 hours between any two self-promo posts to the same sub from the same account.
+- **Escalation rule**: if any post from this account was mod-removed in the last 24 hours, drop the daily cap to **one** for the next 24 hours and prefer megathread comments over new posts. Anti-spam tightens around accounts with recent removals.
+
+Surface the current state to the user explicitly: "this would be your Nth self-promo today; cap is 2." If over the cap, refuse and propose a date.
+
+#### 1.1. Sub-rules check (mandatory before flairs)
+
+A growing number of subs (r/ClaudeAI, r/LocalLLaMA at times, several SaaS subs) **forbid self-promo posts entirely** and require self-promo to go in a weekly megathread as a comment. Posting a new submission in those subs gets removed within minutes and burns account reputation.
+
+Check the sub's rules page before drafting. The cheapest read is `gh api /r/<sub>/about/rules` or a quick fetch of the sub's wiki/sidebar. Look for any of:
+
+- "no self-promotion" / "no advertising"
+- "showcases go in the weekly thread"
+- "submissions require X% non-self-promo karma"
+- Megathread-only language: "use the [stickied/weekly/monthly] thread"
+
+If the sub is megathread-only for self-promo, skip the post flow entirely. Find the current megathread (sub's pinned posts, or search "megathread" / "showcase" / "what are you working on") and use the `reply` flow instead (see "Replying to a post or comment" below). A 200-word comment in the right megathread outperforms a removed top-level post every time.
 
 #### 1a. Flairs
 
@@ -143,70 +166,6 @@ Replies follow the same human-style rules as posts (lowercase casual, no marketi
 
 Always dry-run first to confirm the target is interpreted as expected (`replied_to: "post"` vs `"comment"`). Get explicit user approval before the live submit; replies are also irreversible external actions.
 
-> **Approval signal.** An `AskUserQuestion` answer alone may not satisfy the auto-mode classifier for irreversible public posting — it often demands plain-text approval in the conversation ("approve posting", "go", "submit"). Plan for an extra round-trip if the user is on auto-mode.
-
-## Common rejection paths
-
-Some failures don't surface in `flairs` or `--dry-run` — they only fire on the live submit. Knowing the shape of each error saves a retry round.
-
-### `POST_GUIDANCE_VALIDATION_FAILED: Please select a user flair before posting`
-
-The sub requires the **OP's own user-flair** (an account-level tag on that sub), distinct from post-flair. Not visible from `reddit-post flairs`. The user must set it manually on the sub's web UI (sidebar → user flair picker). Re-run after they confirm.
-
-If this error appears, watch for a co-occurring `Our filters have designated this as spam` on the same submit — unflaired users get more aggressive spam gating, so fix the flair first and the spam flag often clears with the same body.
-
-### `Our filters have designated this as spam`
-
-Opaque — Reddit won't say which trigger fired. Try in order until one works:
-
-1. Confirm the OP's user-flair is set (see above).
-2. Drop the bot-disclosure footer temporarily to identify whether it's the link density. If that's the trigger, re-confirm with the user before posting without disclosure (policy implications).
-3. Shorten the body ~30% and reduce inline link count.
-4. Wait a few hours — some spam filters score account age + posting velocity.
-
-### `NO_SELFS: This community doesn't allow text posts`
-
-The sub only accepts link posts (r/programming is the canonical example). `reddit-post flairs` returns ambiguous output for these subs (often "no link-post flair templates"). Don't retry the same content as a self post; advise the user that this sub is link-only and that submitting a bare GitHub link will almost always be removed as low-effort promotion.
-
-### Karma minimum + megathread redirect
-
-Some subs (r/ClaudeAI Showcase posts) remove submissions from low-karma OPs and redirect to a stickied megathread. The mod reply names the megathread URL. Post the body as a **top-level comment** on that megathread (karma minimums don't apply to comments there) via `reddit-post reply <megathread_url>`. Trim the body to comment-appropriate length (~1,000–1,500 chars) — megathread comments compete in a long list and read worse than full posts.
-
-### Silent / shadow removal (community-participation karma)
-
-Some subs (r/webdev is the canonical example) shadow-remove "I built X" posts from accounts with low **engagement-in-this-sub** karma. The post is visible to the OP, gets a `score: 1`, and `removed_by_category` stays null on `reddit-post get`. The PRAW snapshot looks healthy (`approved: null`, `banned_by: null`) — but the post is invisible to the rest of the sub.
-
-**Critical:** AutoModerator sends a removal message to the user's Reddit inbox. The inbox is the source of truth, not `reddit-post get`. After any submission to a strict sub, also pull the inbox:
-
-```bash
-uv run python -c "
-from reddit_mcp.auth import reddit_client
-reddit = reddit_client()
-for item in reddit.inbox.unread(limit=20):
-    item._fetch()
-    body = item.body[:300] if hasattr(item,'body') else ''
-    print(f'{item.fullname} | r/{item.subreddit.display_name} | u/{item.author.name if item.author else \"?\"}\n  {body}\n')
-"
-```
-
-Common automod removal patterns seen in inbox:
-
-- **r/LocalLLaMA**: `Your post was removed as you do not have sufficient karma on r/LocalLLaMa. ... Please participate in the sub (through comments) and re-post`
-- **r/webdev**: `Your post has been automatically removed. ... Your account should be at least a month old with several comments before posting submissions in our community.`
-- **r/ClaudeAI Showcase**: not a hard removal — mod-bot redirects to the Build with Claude Showcase Megathread for karma-poor OPs (see "Karma minimum + megathread redirect" above).
-
-If any of these messages are in the inbox for a post you submitted, treat it as removed even if `reddit-post get` claims `score: 1`.
-
-Mitigation:
-
-- Before recommending a fresh "I built X" submission to a community-strict sub (r/webdev, r/javascript, r/programming-adjacent), ask the user whether they've recently commented / upvoted there. If the answer is "no, this would be my first post," recommend a **participation-first** strategy: have them spend a few days leaving substantive comments on existing posts before submitting their own.
-- After a shadow-removal, do **not** immediately retry the same body — that often escalates the auto-mod's score. Wait at least a week, build in-sub karma via comments, then revise the body before re-submission.
-- Track which subs in this session have already exhibited shadow-removal behavior, and surface that history to the user before suggesting another submission to the same sub.
-
-### Multiple-submission burst rate-limit
-
-Reddit's site-wide anti-spam scores **how many posts the account has submitted in the last few hours** across all subs, not just the target sub. After 3–4 link/text posts from the same account inside a day, even otherwise-valid submissions start to trigger silent filters in stricter subs. If a user wants to promote across multiple subs in one session, recommend spacing submissions over multiple days, or at minimum sequencing safer subs (looser community-karma, e.g. r/SideProject) before stricter ones.
-
 ## Editing and deleting
 
 Reddit allows editing the **body** of self posts, not the title.
@@ -232,7 +191,7 @@ Risks of delete + repost:
 Reddit's [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy) requires bot-generated content to clearly disclose its automated nature.
 
 - "Bot-generated" includes posts where an LLM drafted the body, even if the human approved.
-- The policy-safe form is a one-line italic disclosure at the bottom: *posted via my own Reddit MCP — https://github.com/cskwork/reddit-mcp*
+- The policy-safe form is a one-line italic disclosure at the bottom: *posted via my own Reddit MCP — https://github.com/cskwork/reddit-skill*
 - If the user asks to omit the disclosure, **flag the policy conflict once** ("technically this triggers the bot-disclosure rule and risks moderator action"), then comply with the user's call. The user owns the account and the consequences.
 - Never silently drop the disclosure to make a post look more organic. Always surface the choice.
 
