@@ -1,6 +1,6 @@
 ---
 name: reddit-poster
-description: Draft and publish Reddit posts that read human (lowercase, story-first) using the cskwork/reddit-skill tools, with flair lookup, dry-run, and Reddit Responsible Builder Policy compliance.
+description: Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.
 when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on Reddit", or invokes /reddit-poster. Also when editing or deleting their own posts, or replying to a post or comment.
 allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
