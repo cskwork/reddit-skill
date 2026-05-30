@@ -79,6 +79,14 @@ def main(argv: list[str] | None = None) -> int:
     p_search.add_argument("--time-filter", default="all",
                           choices=["all", "year", "month", "week", "day", "hour"])
 
+    p_comments = sub.add_parser("comments", help="List a post's comments (with ids) for replying.")
+    p_comments.add_argument("ref", help="Post or comment URL, fullname (t1_/t3_), or bare ID.")
+    p_comments.add_argument("--sort", default="top",
+                            choices=["best", "top", "new", "controversial", "old"])
+    p_comments.add_argument("--limit", type=int, default=50)
+    p_comments.add_argument("--kind", choices=["post", "comment"],
+                            help="Force interpretation. Default: auto-detect from ref.")
+
     args = parser.parse_args(argv)
     reddit = reddit_client()
 
@@ -129,6 +137,13 @@ def main(argv: list[str] | None = None) -> int:
             sort=args.sort, time_filter=args.time_filter,
         )
         print(json.dumps(results, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "comments":
+        result = reddit_ops.list_comments(
+            reddit, args.ref, sort=args.sort, limit=args.limit, kind=args.kind,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
     if args.cmd == "post":

@@ -89,6 +89,30 @@ def reply(target: str, body: str, kind: Optional[str] = None) -> dict:
 
 
 @mcp.tool()
+def get_comments(
+    ref: str,
+    sort: str = "top",
+    limit: int = 50,
+    kind: Optional[str] = None,
+) -> dict:
+    """List a post's top-level comments (or a comment's replies) with their ids.
+
+    Use this to find a comment's thing_id (`t1_xxx`) before calling `reply`.
+
+    Args:
+        ref: Post or comment URL, fullname (`t3_`/`t1_`), or bare ID.
+        sort: best|top|new|controversial|old. Applies to a post's comments.
+        limit: Max comments to return.
+        kind: Force "post" or "comment". Default: auto-detect from ref.
+
+    Returns:
+        Dict with post_id/comment_id, sort, count, and a list of comments
+        each carrying id, thing_id, author, score, and a body snippet.
+    """
+    return reddit_ops.list_comments(reddit_client(), ref, sort=sort, limit=limit, kind=kind)
+
+
+@mcp.tool()
 def search_reddit(
     query: str,
     subreddit: Optional[str] = None,
