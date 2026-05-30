@@ -2,15 +2,15 @@
 
 A Reddit **CLI** (`reddit-post`) for posting with **proper flair handling**, with an optional MCP server on the side. Built because the popular Reddit MCP servers either don't expose `flair_id` at all or pass the flair text where Reddit's API expects an ID.
 
-- **CLI** (primary): `reddit-post post|flairs|get|edit|delete|reply|search` — all features, no MCP client required.
+- **CLI** (primary): `reddit-post post|flairs|get|edit|delete|reply|comments|search` — all features, no MCP client required.
 - **MCP server** (optional): same tools exposed over stdio for Claude Code / Claude Desktop.
 - **Skill**: bundled `reddit-poster` Claude skill that wraps the CLI in a discover → draft → dry-run → approve flow.
 
 ## Install
 
 ```bash
-git clone https://github.com/cskwork/reddit-mcp
-cd reddit-mcp
+git clone https://github.com/cskwork/reddit-skill
+cd reddit-skill
 uv sync
 ```
 
@@ -72,6 +72,20 @@ uv run reddit-post reply abc123 --body "..." --kind comment
 
 Returns `{id, fullname, url, parent_id, body, replied_to, parent_url}`. If Reddit accepts the request but returns no comment (rate-limit or shadow-block), the call raises with a clear message instead of silently succeeding.
 
+### List comments (to find an id to reply to)
+
+`reply` needs a comment's URL or `t1_` id, but a bare post URL doesn't hand those out. List them first:
+
+```bash
+# Top-level comments of a post: id, thing_id (t1_, ready for reply), author, score, body
+uv run reddit-post comments <post-url-or-id> --sort new --limit 50
+
+# Replies under a specific comment instead of a post's top level
+uv run reddit-post comments <comment-url-or-id> --kind comment
+```
+
+Take a `thing_id` straight to `reddit-post reply <t1_id> --kind comment`.
+
 ### Edit and delete
 
 Reddit only allows editing the **body** of self posts, not the title.
@@ -92,7 +106,7 @@ If you prefer to call these tools from Claude Code / Claude Desktop's MCP integr
   "reddit": {
     "type": "stdio",
     "command": "uv",
-    "args": ["--directory", "/absolute/path/to/reddit-mcp", "run", "reddit-mcp"],
+    "args": ["--directory", "/absolute/path/to/reddit-skill", "run", "reddit-mcp"],
     "env": {
       "REDDIT_CLIENT_ID": "...",
       "REDDIT_CLIENT_SECRET": "...",
@@ -103,7 +117,7 @@ If you prefer to call these tools from Claude Code / Claude Desktop's MCP integr
 }
 ```
 
-Restart Claude Code. Seven tools become available: `create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`.
+Restart Claude Code. Eight tools become available: `create_post`, `edit_post`, `delete_post`, `reply`, `get_comments`, `list_flairs`, `get_post`, `search_reddit`.
 
 The MCP path is functionally equivalent to the CLI — same package, same PRAW under the hood, same flair resolution. Choose based on where you want to call from.
 
