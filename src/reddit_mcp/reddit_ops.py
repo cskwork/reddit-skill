@@ -279,3 +279,43 @@ def search(
             "is_self": s.is_self,
         })
     return out
+
+
+def list_comments(
+    reddit: praw.Reddit,
+    ref: str,
+    *,
+    sort: str = "top",
+    limit: int = 50,
+    kind: Optional[str] = None,
+) -> dict:
+    """List a post's top-level comments (or a comment's replies) with ids for replying.
+
+    Each entry includes `thing_id` (`t1_xxx`), which can be passed straight to `reply`.
+    Auto-detects post vs. comment from `ref`; pass `kind` to force.
+    """
+    is_comment = (kind == "comment") if kind else _looks_like_comment_target(ref)
+    if is_comment:
+        target = reddit.comment(url=ref) if "://" in ref else reddit.comment(id=ref.removeprefix("t1_"))
+        target.refresh()
+        forest = target.replies
+        parent = {"comment_id": target.id}
+    else:
+        target = reddit.submission(url=ref) if "://" in ref else reddit.submission(id=ref.removeprefix("t3_"))
+        # Reddit's API exposes the "best" sort as "confidence".
+        target.comment_sort = "confidence" if sort == "best" else sort
+        forest = target.comments
+        parent = {"post_id": target.id}
+    forest.replace_more(limit=0)
+    comments = []
+    for c in forest:
+        comments.append({
+            "id": c.id,
+            "thing_id": c.fullname,
+            "author": str(c.author) if c.author else None,
+            "score": c.score,
+            "body": c.body[:280],
+        })
+        if len(comments) >= limit:
+            break
+    return {**parent, "sort": sort, "count": len(comments), "comments": comments}
