@@ -114,6 +114,19 @@ Confirm `link_flair_text` matches what you intended — that's the only way to b
 
 Use `reply` to leave a top-level comment on a submission, or to respond to a specific comment.
 
+### Finding a comment id first
+
+`reply` needs the comment's URL or id, but a bare post URL doesn't hand you per-comment ids, and fetching `reddit.com/...json` is blocked in some sandboxes. When you only have the post and want to answer specific commenters, list ids first:
+
+```bash
+# id | thing_id (t1_xxx) | author | score | body snippet, for every top-level comment
+uv run reddit-post comments <post_url|id> --sort new --limit 50
+# replies under one comment instead of a post's top level:
+uv run reddit-post comments <comment_url|id> --kind comment
+```
+
+Take the `thing_id` (`t1_...`) straight to `reply <thing_id> --kind comment` or the MCP `reply` tool. The MCP `get_comments` tool returns the same fields if you prefer that path.
+
 ```bash
 # Reply to a post (auto-detected from submission URL)
 uv run reddit-post reply <post_url> --body-file reply.md --dry-run
