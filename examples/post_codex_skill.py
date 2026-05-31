@@ -24,7 +24,7 @@ BODY = """Single skill, three subcommands:
 
 Needs Claude Code + `codex >= 0.128` + `codex login`.
 
-*Posted via my own Reddit MCP (https://github.com/cskwork/reddit-mcp) at my request.*
+*Posted via my own Reddit skill (https://github.com/cskwork/reddit-skill) at my request.*
 """
 
 

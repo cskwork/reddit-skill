@@ -6,7 +6,7 @@ tools over MCP: `create_post`, `edit_post`, `delete_post`, `list_flairs`, `get_p
 
 credentials read from env vars first, then `~/.claude.json` `mcpServers.reddit.env` as fallback, so it slots into existing configs without re-entering secrets.
 
-repo (MIT, python + PRAW + FastMCP): https://github.com/cskwork/reddit-mcp
+repo (MIT, python + PRAW + FastMCP): https://github.com/cskwork/reddit-skill
 
 happy to take feedback or PRs — especially if your sub uses flair conventions i haven't tested against.
 
