@@ -1,12 +1,12 @@
 [project]
 name = "cskwork-reddit-mcp"
 version = "0.2.0"
-description = "Reddit CLI for posting with proper flair support (plus an optional MCP server). Built on PRAW."
+description = "Claude skill for human-style Reddit posting with proper flair support, backed by a CLI and an optional MCP server. Built on PRAW."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "cskwork" }]
-keywords = ["reddit", "mcp", "praw", "claude", "model-context-protocol"]
+keywords = ["reddit", "claude-skill", "skill", "praw", "claude", "mcp", "model-context-protocol"]
 dependencies = [
     "praw>=7.7,<8",
     "mcp[cli]>=1.2",

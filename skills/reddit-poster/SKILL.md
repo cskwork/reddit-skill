@@ -5,7 +5,7 @@ when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on R
 allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
 
-Wrap the `cskwork/reddit-skill` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Available as a CLI (`reddit-post`) or as MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`).
+Wrap the `cskwork/reddit-skill` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Drives the **`reddit-post` CLI** as the primary path (works in any session regardless of MCP loading state); the same tools are also exposed as optional MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`) for those who prefer that transport.
 
 Repo: <https://github.com/cskwork/reddit-skill>
 
