@@ -15,4 +15,4 @@ repo: https://github.com/edwardkim/rhwp (MIT)
 
 not my project — just a fan sharing because rust+wasm for proprietary-format parsing feels like a niche that deserves more attention here.
 
-*(disclosure: posted via my own reddit MCP — https://github.com/cskwork/reddit-mcp)*
+*(disclosure: posted via my own reddit skill — https://github.com/cskwork/reddit-skill)*
