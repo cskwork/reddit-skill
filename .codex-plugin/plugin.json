@@ -29,6 +29,8 @@
     "defaultPrompt": [
       "Use reddit-poster for this task."
     ],
-    "brandColor": "#2563EB"
+    "brandColor": "#2563EB",
+    "composerIcon": "./logo.png",
+    "logo": "./logo.png"
   }
 }
