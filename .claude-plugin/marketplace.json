@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "reddit-poster",
+  "description": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+  "owner": {
+    "name": "cskwork"
+  },
+  "plugins": [
+    {
+      "name": "reddit-poster",
+      "description": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

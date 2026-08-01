@@ -1,0 +1,34 @@
+{
+  "name": "reddit-poster",
+  "version": "0.1.0",
+  "description": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+  "author": {
+    "name": "cskwork",
+    "url": "https://github.com/cskwork"
+  },
+  "homepage": "https://github.com/cskwork/reddit-poster",
+  "repository": "https://github.com/cskwork/reddit-poster",
+  "license": "MIT",
+  "keywords": [
+    "reddit-poster",
+    "skill",
+    "claude-code",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Reddit Poster",
+    "shortDescription": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Respo",
+    "longDescription": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+    "developerName": "cskwork",
+    "category": "Productivity",
+    "capabilities": [
+      "Instructions"
+    ],
+    "websiteURL": "https://github.com/cskwork/reddit-poster",
+    "defaultPrompt": [
+      "Use reddit-poster for this task."
+    ],
+    "brandColor": "#2563EB"
+  }
+}
