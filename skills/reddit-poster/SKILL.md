@@ -1,9 +1,8 @@
 ---
 name: reddit-poster
 description: reddit-poster — human-style Reddit posts. Use when: "post on Reddit", "share on r/X", "/reddit-poster".
-when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on Reddit", or invokes /reddit-poster. Also when editing or deleting their own posts, or replying to a post or comment.
-allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
+
 
 # reddit-poster
 

@@ -1,9 +1,8 @@
 ---
 name: reddit-poster
 description: reddit-poster — human-style Reddit posts. Use when: "post on Reddit", "share on r/X", "/reddit-poster".
-when_to_use: User asks to "post on Reddit", "share this on r/X", "advertise on Reddit", or invokes /reddit-poster. Also when editing or deleting their own posts, or replying to a post or comment.
-allowed-tools: Bash(uv *) Bash(reddit-post *) Read Write
 ---
+
 
 Wrap the `cskwork/reddit-skill` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Drives the **`reddit-post` CLI** as the primary path (works in any session regardless of MCP loading state); the same tools are also exposed as optional MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`) for those who prefer that transport.
 
