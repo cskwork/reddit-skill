@@ -1,6 +1,7 @@
 ---
 name: reddit-poster
-description: reddit-poster — human-style Reddit posts. Use when: "post on Reddit", "share on r/X", "/reddit-poster".
+description: 'reddit-poster — human-style Reddit posts. Use when: "post on Reddit", "share on r/X", "/reddit-poster".'
+
 ---
 
 
