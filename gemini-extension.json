@@ -1,0 +1,6 @@
+{
+  "name": "reddit-poster",
+  "version": "0.1.0",
+  "description": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+  "contextFileName": "GEMINI.md"
+}
