@@ -1,7 +1,7 @@
 {
   "name": "reddit-poster",
   "version": "0.1.0",
-  "description": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+  "description": "reddit-poster \u2014 human-style Reddit posts. Use when: \"post on Reddit\", \"share on r/X\", \"/reddit-poster\".",
   "author": {
     "name": "cskwork",
     "url": "https://github.com/cskwork"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Reddit Poster",
-    "shortDescription": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Respo",
-    "longDescription": "Draft and publish human-style Reddit posts with flair lookup, dry-run, and Responsible Builder Policy compliance.",
+    "shortDescription": "reddit-poster \u2014 human-style Reddit posts. Use when: \"post on Reddit\", \"share on",
+    "longDescription": "reddit-poster \u2014 human-style Reddit posts. Use when: \"post on Reddit\", \"share on r/X\", \"/reddit-poster\".",
     "developerName": "cskwork",
     "category": "Productivity",
     "capabilities": [
