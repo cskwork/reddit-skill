@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.png" width="120" alt="logo" /></p>
+
 # reddit-skill
 
 A Claude **skill** (`reddit-poster`) for posting to Reddit the way a careful human would: discover the sub's flair and conventions, draft in a story-first style instead of marketing copy, dry-run, and stop for your approval before anything irreversible. Under the hood it's a Reddit **CLI** (`reddit-post`) with **proper flair handling** — built because the popular Reddit MCP servers either don't expose `flair_id` at all or pass the flair text where Reddit's API expects an ID.
