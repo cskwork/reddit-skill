@@ -6,7 +6,7 @@
 ### Install
 
 ```bash
-claude plugin marketplace add cskwork/reddit-poster
+claude plugin marketplace add cskwork/reddit-skill
 claude plugin install reddit-poster@reddit-poster
 ```
 
@@ -39,7 +39,7 @@ claude plugin marketplace remove reddit-poster
 ### Install
 
 ```bash
-codex plugin marketplace add cskwork/reddit-poster --ref main
+codex plugin marketplace add cskwork/reddit-skill --ref main
 codex plugin add reddit-poster@reddit-poster
 ```
 
@@ -66,14 +66,14 @@ codex plugin marketplace remove reddit-poster
 ### Install (extension, always-on)
 
 ```bash
-gemini extensions install https://github.com/cskwork/reddit-poster
+gemini extensions install https://github.com/cskwork/reddit-skill
 ```
 
 ### Install (command, opt-in)
 
 ```bash
 mkdir -p ~/.gemini/commands
-curl -fsSL https://raw.githubusercontent.com/cskwork/reddit-poster/main/skills/reddit-poster/agents/gemini.toml \
+curl -fsSL https://raw.githubusercontent.com/cskwork/reddit-skill/main/skills/reddit-skill/agents/gemini.toml \
   -o ~/.gemini/commands/reddit-poster.toml
 ```
 
@@ -99,8 +99,8 @@ gemini extensions uninstall reddit-poster
 ### Install
 
 ```bash
-npx skills add cskwork/reddit-poster
-npx skills add cskwork/reddit-poster -g
+npx skills add cskwork/reddit-skill
+npx skills add cskwork/reddit-skill -g
 ```
 
 Type `/reddit-poster` in a new agent chat.
@@ -131,7 +131,7 @@ npx skills remove reddit-poster
 ### Install
 
 ```bash
-agy plugin install https://github.com/cskwork/reddit-poster
+agy plugin install https://github.com/cskwork/reddit-skill
 ```
 
 ### Verify

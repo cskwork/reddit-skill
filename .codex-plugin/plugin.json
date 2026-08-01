@@ -6,8 +6,8 @@
     "name": "cskwork",
     "url": "https://github.com/cskwork"
   },
-  "homepage": "https://github.com/cskwork/reddit-poster",
-  "repository": "https://github.com/cskwork/reddit-poster",
+  "homepage": "https://github.com/cskwork/reddit-skill",
+  "repository": "https://github.com/cskwork/reddit-skill",
   "license": "MIT",
   "keywords": [
     "reddit-poster",
@@ -25,7 +25,7 @@
     "capabilities": [
       "Instructions"
     ],
-    "websiteURL": "https://github.com/cskwork/reddit-poster",
+    "websiteURL": "https://github.com/cskwork/reddit-skill",
     "defaultPrompt": [
       "Use reddit-poster for this task."
     ],
