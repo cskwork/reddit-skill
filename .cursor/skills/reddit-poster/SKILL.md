@@ -1,9 +1,11 @@
 ---
 name: reddit-poster
-description: 'reddit-poster — human-style Reddit posts. Use when: "post on Reddit", "share on r/X", "/reddit-poster".'
+description: 'reddit-poster — human-style Reddit posts, replies, and edits. Use when: "post on Reddit", "share on r/X", "reply to a Reddit post or comment", "edit or delete my Reddit post", "/reddit-poster".'
 
 ---
 
+
+# reddit-poster
 
 Wrap the `cskwork/reddit-skill` toolkit so Claude can take a project, repo, or idea and publish a Reddit post that doesn't read like marketing copy. Drives the **`reddit-post` CLI** as the primary path (works in any session regardless of MCP loading state); the same tools are also exposed as optional MCP tools (`create_post`, `edit_post`, `delete_post`, `reply`, `list_flairs`, `get_post`, `search_reddit`) for those who prefer that transport.
 
@@ -16,7 +18,7 @@ uv --version       # 0.4+ recommended
 cd <path-to-reddit-skill> && uv run reddit-post --help
 ```
 
-If credentials missing, the CLI raises with the exact env vars to set. Defaults: env vars first, then `~/.claude.json`'s `mcpServers.reddit.env` fallback.
+If credentials missing, the CLI raises with the exact env vars to set. Resolution order: env vars → `.env` walked up from cwd (the recommended setup) → `~/.claude.json`'s `mcpServers.reddit.env` fallback.
 
 ## The four-step flow
 
@@ -25,7 +27,7 @@ Every Reddit post follows this loop. Don't skip steps.
 1. **Discover** — list flairs **and** pull the top 5 most-upvoted recent posts on the relevant topic in the target sub.
 2. **Draft** — write a human-style body that matches what you saw in step 1, show it to the user, iterate.
 3. **Dry-run** — confirm flair resolution and length before going live.
-4. **Post** — get explicit user approval, then `create_post`.
+4. **Post** — get explicit user approval, then `reddit-post post`.
 
 ### Step 1 — discover
 
@@ -39,7 +41,7 @@ Before any sub-specific work, enforce two account-level limits. Self-promo failu
 - **Per-sub cooldown**: 24 hours between any two self-promo posts to the same sub from the same account.
 - **Escalation rule**: if any post from this account was mod-removed in the last 24 hours, drop the daily cap to **one** for the next 24 hours and prefer megathread comments over new posts. Anti-spam tightens around accounts with recent removals.
 
-Surface the current state to the user explicitly: "this would be your Nth self-promo today; cap is 2." If over the cap, refuse and propose a date.
+The toolkit exposes no account-history command, so N comes from this session's own posts plus one question to the user. Surface the count explicitly: "this would be your Nth self-promo today; cap is 2." If over the cap, refuse and propose a date.
 
 #### 1.1. Sub-rules check (mandatory before flairs)
 
@@ -109,7 +111,7 @@ The other rules:
 - **Code references inline with backticks.** No code blocks unless the snippet is non-trivial. One install snippet is enough; don't add a quickstart, an "advanced usage", and a "configuration" block in the same post.
 - **Keep title plain, but capitalize it.** The body is lowercase casual; the **title is not**. Use sentence case at minimum (first letter capital, proper nouns capital, rest natural). Title Case is fine for short titles. All-lowercase titles read as either careless or affected and most subs penalize them. Reddit titles are immutable post-submit; triple-check before submitting.
 
-After drafting, do a length check: count words. If over the ceiling, cut before showing the user. The user shouldn't have to ask twice.
+After drafting, do a length check: count words. If over the ceiling, cut before showing the user.
 
 ### Step 3 — dry-run
 
