@@ -102,6 +102,7 @@ If your draft is over the target, the right move is almost always cutting, not c
 
 The other rules:
 
+- **Say what the thing does within the first three sentences.** A hook is fine, but by sentence three a stranger must be able to answer "what is this?" in plain words. Real comment that prompted this rule: "Can you write this in human so I can understand what it does better?" If the reader has to reach the middle of the post to learn what the tool is, the post failed no matter how good the prose is.
 - **Open with a personal moment or a concrete number, not a feature list.** "got tired of jumping between two terminals…" beats "Single skill, three subcommands:". Lead with the pain, the trigger, or a surprising data point.
 - **Default to lowercase, casual sentences.** Reserve capitals for proper nouns and code identifiers.
 - **No TL;DR, no heavy bold, no emoji, no marketing adjectives.** Skip "powerful", "blazing", "seamless", "easy-to-use".
@@ -111,7 +112,18 @@ The other rules:
 - **Code references inline with backticks.** No code blocks unless the snippet is non-trivial. One install snippet is enough; don't add a quickstart, an "advanced usage", and a "configuration" block in the same post.
 - **Keep title plain, but capitalize it.** The body is lowercase casual; the **title is not**. Use sentence case at minimum (first letter capital, proper nouns capital, rest natural). Title Case is fine for short titles. All-lowercase titles read as either careless or affected and most subs penalize them. Reddit titles are immutable post-submit; triple-check before submitting.
 
-After drafting, do a length check: count words. If over the ceiling, cut before showing the user.
+**AI-tell audit (mandatory, before showing the user).** Well-crafted prose can still scream LLM. After the length check, reread the draft asking "what makes this obviously AI-written?" and fix these tells:
+
+- **"not X, but Y" / "X, not Y" framings.** "contracts, not headcount", "a liability, not an asset", "bound to bytes, not to memory". One per post at most; zero is better. Stacked, they are the single loudest LLM tell.
+- **Aphorisms and slogan lines.** If a sentence would work on a conference slide, rewrite it as a plain statement of what happens.
+- **Triadic repetition and twist endings.** "I wrote it. I reviewed it. I never saw it." Every paragraph landing on a punchline is machine cadence. Vary rhythm; let most sentences just end.
+- **Em dashes.** Periods or commas instead.
+- **Uniform paragraph shape.** Humans write a one-line paragraph next to a five-line one.
+- **Abstract manifesto before concrete mechanism.** Cut the philosophy paragraph; keep the anecdote and what the tool actually does.
+
+If two or more tells survive a pass, rewrite the draft from scratch instead of patching lines — patched drafts keep the skeleton that caused the problem.
+
+Length check: count words. If over the ceiling, cut whole ideas, then run the AI-tell audit again on what remains. Only then show the user.
 
 ### Step 3 — dry-run
 
@@ -177,7 +189,7 @@ uv run reddit-post reply <comment_url> --body "..."
 uv run reddit-post reply abc123 --body "..." --kind comment
 ```
 
-Replies follow the same human-style rules as posts (lowercase casual, no marketing tone), but shorter. A reply that runs longer than the comment it answers usually loses readers — match the length of the question, not the length of your codebase.
+Replies follow the same human-style rules and AI-tell audit as posts (lowercase casual, no marketing tone), but shorter. A reply that runs longer than the comment it answers usually loses readers — match the length of the question, not the length of your codebase.
 
 Always dry-run first to confirm the target is interpreted as expected (`replied_to: "post"` vs `"comment"`). Get explicit user approval before the live submit; replies are also irreversible external actions.
 
