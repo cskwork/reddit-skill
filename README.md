@@ -18,7 +18,7 @@ uv sync
 
 ## Claude Code skill — `reddit-poster` (the main way to use this)
 
-The bundled skill at [`skills/reddit-poster/SKILL.md`](skills/reddit-poster/SKILL.md) is the recommended entry point. It teaches Claude to post like a person, not a bot: discover flairs and read the sub's top posts first, draft in a human (lowercase, story-first) style instead of marketing copy, dry-run before posting, follow Reddit's Responsible Builder Policy on disclosure, and stop for explicit user approval before any irreversible action (post, edit, delete).
+The bundled skill at [`skills/reddit-poster/SKILL.md`](skills/reddit-poster/SKILL.md) is the recommended entry point. It teaches Claude to post like a person, not a bot: discover flairs and read the sub's top posts first, draft in a human (lowercase, story-first) style instead of marketing copy, dry-run before posting, check current app-transparency and subreddit disclosure requirements, and stop for explicit user approval before any irreversible action (post, edit, delete).
 
 Install:
 
