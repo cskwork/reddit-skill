@@ -1,6 +1,6 @@
 ---
 name: reddit-poster
-description: 'reddit-poster — human-style Reddit posts, replies, and edits. Use when: "post on Reddit", "share on r/X", "reply to a Reddit post or comment", "edit or delete my Reddit post", "/reddit-poster".'
+description: Draft, preview, publish, reply to, edit, or delete Reddit content using the reddit-post CLI, with subreddit-rule checks, flair validation, and explicit authorization for live changes.
 
 ---
 
@@ -35,26 +35,24 @@ Pick exactly one subreddit. Cross-posting identical content violates Reddit Resp
 
 #### 1.0. Account-level gate (mandatory before step 1a)
 
-Before any sub-specific work, enforce two account-level limits. Self-promo failures here are far more damaging than picking the wrong sub: a single shadowban silently removes every future post.
+Use these conservative toolkit defaults for self-promotion, not as claimed Reddit platform limits:
 
-- **Daily self-promo cap**: at most **two** posts from this account per 24 hours when each links to a repo or product the account owns. If two have already gone out today across any subs, hold the third for tomorrow. No exceptions for "but the subs are different" — Reddit's anti-spam tracks accounts, not subs.
-- **Per-sub cooldown**: 24 hours between any two self-promo posts to the same sub from the same account.
-- **Escalation rule**: if any post from this account was mod-removed in the last 24 hours, drop the daily cap to **one** for the next 24 hours and prefer megathread comments over new posts. Anti-spam tightens around accounts with recent removals.
+- At most two owned-product/repo posts per rolling 24 hours across all subreddits.
+- Wait 24 hours between self-promotional posts to the same subreddit.
+- After a moderator removal, use a one-post cap for the next 24 hours and check whether the community requires a megathread.
 
-The toolkit exposes no account-history command, so N comes from this session's own posts plus one question to the user. Surface the count explicitly: "this would be your Nth self-promo today; cap is 2." If over the cap, refuse and propose a date.
+The toolkit has no account-history command. Use known session activity and ask only for missing recent history; do not infer a count. State the count and applicable limit before proceeding. If the limit is reached, hold the post and report when it can be reconsidered.
 
 #### 1.1. Sub-rules check (mandatory before flairs)
 
-A growing number of subs (r/ClaudeAI, r/LocalLLaMA at times, several SaaS subs) **forbid self-promo posts entirely** and require self-promo to go in a weekly megathread as a comment. Posting a new submission in those subs gets removed within minutes and burns account reputation.
-
-Check the sub's rules page before drafting. The cheapest read is `gh api /r/<sub>/about/rules` or a quick fetch of the sub's wiki/sidebar. Look for any of:
+Read the target subreddit's current rules/sidebar in the browser before drafting. Do not use `gh api` for Reddit; it addresses GitHub. Look for any of:
 
 - "no self-promotion" / "no advertising"
 - "showcases go in the weekly thread"
 - "submissions require X% non-self-promo karma"
 - Megathread-only language: "use the [stickied/weekly/monthly] thread"
 
-If the sub is megathread-only for self-promo, skip the post flow entirely. Find the current megathread (sub's pinned posts, or search "megathread" / "showcase" / "what are you working on") and use the `reply` flow instead (see "Replying to a post or comment" below). A 200-word comment in the right megathread outperforms a removed top-level post every time.
+If the sub is megathread-only for self-promo, skip the post flow entirely. Find the current megathread (sub's pinned posts, or search "megathread" / "showcase" / "what are you working on") and use the `reply` flow instead (see "Replying to a post or comment" below). Do not substitute a top-level post when the rules require a comment.
 
 #### 1a. Flairs
 
@@ -91,7 +89,7 @@ PRAW does not expose Reddit's view counts (mod-only data), so "top" ranks by sco
 
 The post must read like a person sharing something they built, not a landing page. Apply what you observed in step 1b — the rules below are defaults, not overrides.
 
-**Length is the most important rule.** Reddit readers scroll. A post that needs scrolling on mobile loses 70%+ of readers before they finish. Target word counts:
+Use these editorial length defaults, adjusted to the community evidence from step 1b:
 
 - **Showcase / project share**: 120-200 words. Hard ceiling 250.
 - **Tutorial / explainer**: 200-400 words. Hard ceiling 500.
@@ -110,7 +108,7 @@ The other rules:
 - **Acknowledge limitations honestly but tersely.** One line, in the body, not a "known limits" section. Long limits sections read as defensive and add length without adding value.
 - **End with a low-key invitation in one short sentence.** "curious what your X looks like" or "happy to take feedback". Not "smash that upvote", not a multi-line outro.
 - **Code references inline with backticks.** No code blocks unless the snippet is non-trivial. One install snippet is enough; don't add a quickstart, an "advanced usage", and a "configuration" block in the same post.
-- **Keep title plain, but capitalize it.** The body is lowercase casual; the **title is not**. Use sentence case at minimum (first letter capital, proper nouns capital, rest natural). Title Case is fine for short titles. All-lowercase titles read as either careless or affected and most subs penalize them. Reddit titles are immutable post-submit; triple-check before submitting.
+- **Keep title plain, but capitalize it.** The body is lowercase casual; the **title is not**. Use sentence case at minimum (first letter capital, proper nouns capital, rest natural). Title Case is fine for short titles. Reddit titles are immutable post-submit; verify the final title before submitting.
 
 **AI-tell audit (mandatory, before showing the user).** Well-crafted prose can still scream LLM. After the length check, reread the draft asking "what makes this obviously AI-written?" and fix these tells:
 
@@ -121,7 +119,7 @@ The other rules:
 - **Uniform paragraph shape.** Humans write a one-line paragraph next to a five-line one.
 - **Abstract manifesto before concrete mechanism.** Cut the philosophy paragraph; keep the anecdote and what the tool actually does.
 
-If two or more tells survive a pass, rewrite the draft from scratch instead of patching lines — patched drafts keep the skeleton that caused the problem.
+Fix the affected passages; rewrite the whole draft only when its structure causes the problem.
 
 Length check: count words. If over the ceiling, cut whole ideas, then run the AI-tell audit again on what remains. Only then show the user.
 
@@ -213,14 +211,11 @@ Risks of delete + repost:
 - The original URL dies (broken inbound links from elsewhere).
 - Reddit may flag the repost as spam if the body is identical and timing is close. If the original had engagement (>1 score, any comments), warn the user before deleting.
 
-## Disclosure (Reddit Responsible Builder Policy)
+## Disclosure and app transparency
 
-Reddit's [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy) requires bot-generated content to clearly disclose its automated nature.
+Check the current [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy) and subreddit rules. The policy checked on 2026-09-08 requires app registration/profile labeling, prohibits circumvention of Reddit labeling, and bans automated spam including substantially similar cross-subreddit content. It does not prescribe the footer below or define every human-approved LLM draft as a bot post.
 
-- "Bot-generated" includes posts where an LLM drafted the body, even if the human approved.
-- The policy-safe form is a one-line italic disclosure at the bottom: *posted via my own Reddit MCP — https://github.com/cskwork/reddit-skill*
-- If the user asks to omit the disclosure, **flag the policy conflict once** ("technically this triggers the bot-disclosure rule and risks moderator action"), then comply with the user's call. The user owns the account and the consequences.
-- Never silently drop the disclosure to make a post look more organic. Always surface the choice.
+When a footer is useful or required by the community, disclose the actual tool used, for example *posted with reddit-post*. Do not call a CLI submission an MCP submission or imply that a footer substitutes for platform labeling or access approval. Retain required disclosures; discuss optional wording with the user.
 
 ## What not to do
 
