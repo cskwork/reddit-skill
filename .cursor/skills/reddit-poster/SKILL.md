@@ -20,6 +20,8 @@ cd <path-to-reddit-skill> && uv run reddit-post --help
 
 If credentials missing, the CLI raises with the exact env vars to set. Resolution order: env vars → `.env` walked up from cwd (the recommended setup) → `~/.claude.json`'s `mcpServers.reddit.env` fallback.
 
+**Auth note (added):** OAuth is no longer the only route. Reddit closed self-service API app creation, so this CLI also authenticates with a browser session cookie (`~/.config/reddit-session/cookies.json`, mode 600 — `REDDIT_COOKIE_FILE` overrides). Verify with `uv run reddit-post session`; `--auth oauth|session` forces a backend. Full details: `skills/reddit-poster/references/reddit-session-auth.md`.
+
 ## The four-step flow
 
 Every Reddit post follows this loop. Don't skip steps.

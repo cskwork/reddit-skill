@@ -1,7 +1,13 @@
 ---
 name: reddit-poster
-description: Draft, preview, publish, reply to, edit, or delete Reddit content using the reddit-post CLI, with subreddit-rule checks, flair validation, and explicit authorization for live changes.
-
+description: "Use when posting to Reddit with the reddit-post CLI."
+version: 1.0.0
+author: Hermes Agent
+license: MIT
+metadata:
+  hermes:
+    tags: [reddit, posting, social-media, content]
+    related_skills: [browser-session-auth, web-search]
 ---
 
 
@@ -11,14 +17,30 @@ Wrap the `cskwork/reddit-skill` toolkit so Claude can take a project, repo, or i
 
 Repo: <https://github.com/cskwork/reddit-skill>
 
+## When to Use
+
+- The user asks to post, reply to, edit, or delete something on Reddit.
+- Work together has produced something worth sharing and the user names a subreddit.
+- `/reddit-poster` is invoked with a description of what to post.
+
+Drafting, discovery and dry-running are always safe to do unprompted. The live submit is not: it needs an explicit go-ahead every time.
+
 ## Verify once per session
 
 ```bash
 uv --version       # 0.4+ recommended
-cd <path-to-reddit-skill> && uv run reddit-post --help
+cd <path-to-reddit-skill> && uv run reddit-post session
 ```
 
-If credentials missing, the CLI raises with the exact env vars to set. Resolution order: env vars → `.env` walked up from cwd (the recommended setup) → `~/.claude.json`'s `mcpServers.reddit.env` fallback.
+Use a real call, not `--help`: `--help` succeeds with no credentials at all and proves nothing about auth. `session` reports the authenticated username and the credential's remaining life, so it proves the client actually authenticates.
+
+Auth resolution order: OAuth env vars → `.env` walked up from cwd → `~/.claude.json`'s `mcpServers.reddit.env` → **browser session cookie** at `~/.config/reddit-session/cookies.json` (mode 600, or override with `REDDIT_COOKIE_FILE`). The cookie path exists because Reddit closed self-service API app creation, so a new client id cannot be obtained. Cookie handling follows the `browser-session-auth` skill.
+
+To produce that file: install the **Cookie-Editor** extension ([cookie-editor.com](https://cookie-editor.com/) — Chrome, Firefox, Safari, Edge, iOS), open `reddit.com` **while logged in**, then **Export → Export as JSON** and save the result to the path above, followed by `chmod 600`. Pick the *JSON* export specifically: Cookie-Editor also offers Netscape and header-string formats, and those are rejected. Either JSON shape works, a bare array or `{"cookies": [...]}`.
+
+If nothing is configured the CLI raises naming both options. `--auth oauth|session` forces a backend and is accepted on either side of the subcommand; forcing `oauth` fails loudly rather than quietly falling back. The session backend implements reads **and** writes, so a write attempt publishes — dry-run is the only thing standing between a draft and a live post.
+
+Endpoint facts, cookie requirements and the modhash rule: `references/reddit-session-auth.md`.
 
 ## The four-step flow
 
@@ -61,6 +83,8 @@ uv run reddit-post flairs <subreddit>
 ```
 
 If the sub requires flair, you'll see them. If it has none, the CLI says so. Pick a flair that matches the post type (Showcase / Project / Discussion / Help — varies by sub).
+
+Flair text comes back from Reddit's web JSON **HTML-escaped** (`Memory &amp; Context`), which silently defeats matching on what is displayed. The CLI unescapes it; if a flair you can see on screen refuses to match, this escaping is the first thing to check.
 
 #### 1b. Top 5 recent posts on the relevant topic (mandatory)
 
@@ -126,6 +150,16 @@ Length check: count words. If over the ceiling, cut whole ideas, then run the AI
 ### Step 3 — dry-run
 
 Always dry-run. Confirms flair resolves, shows the body byte count, surfaces title issues.
+
+Run the syntax linter first. It catches the Reddit-markdown mistakes that render *silently
+wrong* — no error, just broken output:
+
+```bash
+python3 scripts/reddit_post_check.py <package-dir>   # exit 0 PASS, 1 errors, 2 usage
+python3 scripts/reddit_post_check.py --selftest      # prove the linter itself still works
+```
+
+When touching the linter's nested-emphasis check, do not reach for a regex: no single pattern can tell real nesting from two sibling spans, and a naive one flags correct `**a** and **b**`. Collapse each balanced bold run to a sentinel character first, then look for a leftover single-marker span straddling one — only genuine nesting produces that shape. Keep a case for both the true positives and the siblings in the selftest.
 
 ```bash
 uv run reddit-post post \
@@ -216,6 +250,30 @@ Risks of delete + repost:
 Check the current [Responsible Builder Policy](https://support.reddithelp.com/hc/en-us/articles/42728983564564-Responsible-Builder-Policy) and subreddit rules. The policy checked on 2026-09-08 requires app registration/profile labeling, prohibits circumvention of Reddit labeling, and bans automated spam including substantially similar cross-subreddit content. It does not prescribe the footer below or define every human-approved LLM draft as a bot post.
 
 When a footer is useful or required by the community, disclose the actual tool used, for example *posted with reddit-post*. Do not call a CLI submission an MCP submission or imply that a footer substitutes for platform labeling or access approval. Retain required disclosures; discuss optional wording with the user.
+
+## Reddit Markdown — the parts that bite
+
+Full verified reference: `references/reddit-markdown.md` (sourced from Reddit's own Formatting
+Guide, retrieved via the Zendesk JSON API). Rule the linter enforces, because each one fails
+**silently** — wrong render, no error message:
+
+- **No nested emphasis.** `_a __b__ c_` does not render on old Reddit. Two sibling spans are
+  fine (`**a** and **b**` is correct).
+- **Headings need a space and text:** `# Heading`, never `#Heading`. Prefer `##`; a bare `#` is
+  visually shouty and some subs' CSS resizes it.
+- **Code blocks: 4-space indent**, not ``` fences — fences are invisible on old.reddit.com.
+- **Tables need the marker row** (`|---|---|`) *and* leading/trailing pipes on every row.
+- **Hard line breaks are two trailing spaces**, not a backslash (backslash is new-Reddit only).
+  A single trailing space does nothing.
+- **Ordered lists must start at `1`** and use `.` — `1)` works only on new Reddit.
+- **Blank line before and after** every list, table, heading and quote, or it gets absorbed
+  into the paragraph above.
+- **Titles do NOT render Markdown.** `**bold**` in a title shows the asterisks literally.
+- **Raw HTML tags render as literal text.** Only entities (`&nbsp;`, `&mdash;`) work.
+
+Length: the rich-text composer caps a body at **10,000 characters**; the Markdown editor (and
+API) allows 40,000. A body over 10k is not "too long for Reddit", it is pasted in the wrong
+mode. Count **characters** (`len()`), not bytes — `wc -c` reads ~1% high once em-dashes appear.
 
 ## What not to do
 

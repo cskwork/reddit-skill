@@ -1,6 +1,7 @@
 """Reddit operations shared by the MCP server and the CLI."""
 from __future__ import annotations
 
+import html
 import re
 from dataclasses import dataclass
 from typing import Optional
@@ -26,7 +27,13 @@ class Flair:
 
     @classmethod
     def from_template(cls, t: dict) -> "Flair":
-        return cls(id=t["id"], text=t.get("text") or "", editable=bool(t.get("text_editable")))
+        # Reddit's web JSON HTML-escapes flair text ('Memory &amp; Context'), which
+        # silently breaks the substring match against what the user sees on screen.
+        return cls(
+            id=t["id"],
+            text=html.unescape(t.get("text") or ""),
+            editable=bool(t.get("text_editable")),
+        )
 
 
 def list_flairs(reddit: praw.Reddit, subreddit: str) -> list[Flair]:
@@ -147,10 +154,17 @@ def delete_post(reddit: praw.Reddit, url_or_id: str) -> dict:
     sub_id = sub.id
     permalink = sub.permalink
     try:
-        sub.delete()
+        verified = sub.delete()
     except prawcore.exceptions.PrawcoreException as e:
         raise RuntimeError(f"Reddit API error: {e}") from e
-    return {"id": sub_id, "url": f"https://www.reddit.com{permalink}", "deleted": True}
+    # The web path's /api/del replies `{}` whether or not it acted, so the session
+    # backend reads the thing back and returns that verdict. PRAW returns None.
+    return {
+        "id": sub_id,
+        "url": f"https://www.reddit.com{permalink}",
+        "deleted": True,
+        "verified": bool(verified) if verified is not None else None,
+    }
 
 
 def _looks_like_comment_target(target: str) -> bool:

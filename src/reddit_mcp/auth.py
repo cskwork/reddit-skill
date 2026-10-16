@@ -114,8 +114,36 @@ def load_creds() -> Creds:
     return creds
 
 
-def reddit_client(creds: Optional[Creds] = None) -> praw.Reddit:
-    c = creds or load_creds()
+def reddit_client(creds: Optional[Creds] = None, auth: Optional[str] = None):
+    """PRAW client when OAuth creds exist, else the cookie-session backend.
+
+    Reddit closed self-service API app creation (Nov 2025), so a session cookie
+    is the only route most accounts have. OAuth stays first where it exists.
+
+    `auth` forces a backend: "oauth" or "session". None means auto.
+    """
+    from . import web_session
+
+    if auth == "session":
+        return web_session.session_client()
+
+    if creds is not None:
+        c = creds
+    else:
+        try:
+            c = load_creds()
+        except RuntimeError as exc:
+            if auth == "oauth":
+                # An explicit request for OAuth must never silently become a session.
+                raise
+            if web_session.session_available():
+                return web_session.session_client()
+            raise RuntimeError(
+                "No Reddit credentials. Either set REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, "
+                "REDDIT_USERNAME and REDDIT_PASSWORD (env vars, a .env file, or "
+                "~/.claude.json mcpServers.reddit.env), or export your reddit.com browser "
+                f"cookies to {web_session.cookie_path()} and `chmod 600` it."
+            ) from exc
     return praw.Reddit(
         client_id=c.client_id,
         client_secret=c.client_secret,

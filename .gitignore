@@ -4,3 +4,32 @@ __pycache__/
 evals/results/
 node_modules/
 dist/
+
+# --- credentials and session material: never commit ---
+.env
+.env.*
+!.env.example
+*.env
+cookies.json
+*cookies*.json
+cookie-jars/
+reddit-session/
+*.pem
+*.key
+*.p12
+secrets.*
+
+# --- local planning / agent handoff docs: keep on disk, out of git ---
+openspec/
+AGENT.md
+CLAUDE.md
+NOTES.local.md
+
+# --- editor / tooling ---
+.venv/
+venv/
+.idea/
+.vscode/
+*.swp
+.ruff_cache/
+.pytest_cache/
